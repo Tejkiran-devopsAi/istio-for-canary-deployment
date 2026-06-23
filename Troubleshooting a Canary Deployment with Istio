@@ -1,0 +1,206 @@
+Application → Service → Labels → DestinationRule → VirtualService → Sidecar Injection → Envoy Configuration → Traffic Verification
+Stage 1: Are the pods running?
+kubectl get pods
+
+Expected:
+
+reviews-v1   2/2 Running
+reviews-v2   2/2 Running
+reviews-v3   2/2 Running
+Problem symptoms
+CrashLoopBackOff
+Pending
+ImagePullBackOff
+Fix
+
+Check:
+
+kubectl describe pod <pod-name>
+kubectl logs <pod-name>
+Stage 2: Does the Service see all pods?
+kubectl describe svc reviews
+
+Expected:
+
+Endpoints:
+100.96.1.66:9080
+100.96.3.137:9080
+100.96.2.164:9080
+Problem
+
+No endpoints:
+
+Endpoints: <none>
+Root cause
+
+Service selector doesn't match pod labels.
+
+Stage 3: Do pod labels match subsets?
+
+Check:
+
+kubectl get pods --show-labels
+
+Expected:
+
+reviews-v1 version=v1
+reviews-v2 version=v2
+reviews-v3 version=v3
+
+Compare with:
+
+subsets:
+- name: v1
+  labels:
+    version: v1
+Common issue
+
+Pod label:
+
+version: V1
+
+DestinationRule:
+
+version: v1
+
+(case-sensitive mismatch)
+
+Stage 4: DestinationRule created?
+
+Check:
+
+kubectl get destinationrule
+kubectl describe destinationrule reviews
+Error
+no matches for kind "DestinationRule"
+Root cause
+
+Istio CRDs not installed.
+
+Stage 5: VirtualService correct?
+
+Check:
+
+kubectl describe virtualservice reviews
+
+Example:
+
+http:
+- route:
+  - destination:
+      host: reviews
+      subset: v2
+    weight: 10
+  - destination:
+      host: reviews
+      subset: v3
+    weight: 90
+Problems
+
+Weights don't add up to 100.
+
+Wrong subset name:
+
+subset: version2
+
+but DestinationRule contains:
+
+name: v2
+Stage 6: Is sidecar injected?
+
+This was your issue.
+
+You checked:
+
+kubectl get pods
+
+Initially:
+
+1/1 Running
+
+That means:
+
+❌ No Envoy sidecar
+
+Hence:
+
+❌ VirtualService ignored
+
+❌ Canary not working
+
+Enable:
+
+kubectl label namespace default istio-injection=enabled
+
+Restart:
+
+kubectl delete pods --all
+
+Then:
+
+2/2 Running
+
+Meaning:
+
+✅ Envoy sidecar present
+
+Stage 7: Is Envoy receiving configuration?
+
+Best command:
+
+istioctl proxy-config clusters <productpage-pod>
+
+Expected:
+
+reviews|9080|v1
+reviews|9080|v2
+reviews|9080|v3
+Problem
+
+Only:
+
+reviews|9080
+
+means subsets weren't loaded.
+
+Stage 8: Generate traffic
+for i in {1..100}
+do
+curl http://<LB-IP>/productpage
+done
+Stage 9: Watch logs
+
+Terminal 1:
+
+kubectl logs -f deploy/reviews-v2 -c reviews
+
+Terminal 2:
+
+kubectl logs -f deploy/reviews-v3 -c reviews
+
+If:
+
+v2 = 10%
+v3 = 90%
+
+then:
+
+few requests → v2
+many requests → v3
+Real interview troubleshooting flow
+
+When someone says:
+
+"Canary deployment is not working"
+
+I investigate in this order:
+
+1. Pod health
+2. Service endpoints
+3. Pod labels
+4. DestinationRule
+5. VirtualService
+6. Sidecar injection
+7. Envoy config
+8. Application logs
+9. Traffic generation
