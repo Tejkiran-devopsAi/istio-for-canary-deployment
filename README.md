@@ -2,14 +2,13 @@
 Install Istio
 Download Istio:
 curl -L https://istio.io/downloadIstio | sh -
-istioctl install
-istioctl install --set meshConfig.accessLogFile=/dev/stdout
 Enter the extracted directory:
 cd istio-*
 Add istioctl to PATH:
 export PATH=$PWD/bin:$PATH
 Install Istio:
 istioctl install --set profile=demo -y
+istioctl install --set meshConfig.accessLogFile=/dev/stdout
 Verify:
 kubectl get pods -n istio-system
 
