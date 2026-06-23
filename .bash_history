@@ -1,0 +1,55 @@
+clear
+vim destination.yaml
+vim virtual.yml
+clear
+ls
+kubectl apply destination.yaml
+kubectl apply -f destination.yaml
+kubectl label namespace default istio-injection=enabled
+kubectl apply -f destination.yaml
+vim destination.yaml
+kubectl apply -f destination.yaml
+kubectl get pods -n istio-system
+kubectl get crd | grep istio
+vim destination-rule-all.yaml
+vim bookinfo-gateway.yaml
+clear
+ls
+kubectl apply -f destination-rule-all.yaml
+curl -L https://istio.io/downloadIstio | sh -
+cd istio-*
+export PATH=$PWD/bin:$PATH
+istioctl install --set profile=demo -y
+kubectl get pods -n istio-system
+ls
+exit
+clear
+curl -Lo kops https://github.com/kubernetes/kops/releases/download/$(curl -s https://api.github.com/repos/kubernetes/kops/releases/latest | grep tag_name | cut -d '"' -f 4)/kops-linux-amd64 chmod +x kops sudo mv kops /usr/local/bin/kops
+#kubectl installation curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" chmod +x kubectl sudo mv kubectl /usr/local/bin/kubectl
+#kops installation curl -Lo kops https://github.com/kubernetes/kops/releases/download/$(curl -s https://api.github.com/repos/kubernetes/kops/releases/latest | grep tag_name | cut -d '"' -f 4)/kops-linux-amd64 chmod +x kops sudo mv kops /usr/local/bin/kops
+kops create cluster --name=tejkiran345.k8s.local --zones=us-east-1a,us-east-1b --control-plane-size=c7i-flex.large --control-plane-count=1 --control-plane-volume-size=24 --node-size=c7i-flex.large --node-count=3 --node-volume-size=25 --image=ami-091138d0f0d41ff90
+curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+      chmod +x kubectl
+     mv kubectl /usr/local/bin
+  curl -Lo kops https://github.com/kubernetes/kops/releases/download/$(curl -s https://api.github.com/repos/kubernetes/kops/releases/latest | grep tag_name | cut -d '"' -f 4)/kops-linux-amd64
+ curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+   chmod +x kubectl
+   sudo mv kubectl /usr/local/bin/kubectl
+ curl -Lo kops https://github.com/kubernetes/kops/releases/download/$(curl -s https://api.github.com/repos/kubernetes/kops/releases/latest | grep tag_name | cut -d '"' -f 4)/kops-linux-amd64
+chmod +x kops
+sudo mv kops /usr/local/bin/kops
+clear
+kops create cluster --name=tejkiran345.k8s.local --zones=us-east-1a,us-east-1b --control-plane-size=c7i-flex.large --control-plane-count=1 --control-plane-volume-size=24 --node-size=c7i-flex.large --node-count=3 --node-volume-size=25 --image=ami-091138d0f0d41ff90
+aws s3 ls
+export KOPS_STATE_STORE=s3://kiran5436
+kops create cluster --name=tejkiran345.k8s.local --zones=us-east-1a,us-east-1b --control-plane-size=c7i-flex.large --control-plane-count=1 --control-plane-volume-size=24 --node-size=c7i-flex.large --node-count=3 --node-volume-size=25 --image=ami-091138d0f0d41ff90
+ kops update cluster --name tejkiran345.k8s.local --yes --admin
+clear
+kubectl label namespace default istio-injection=enabled
+vim bookinfo.yaml
+clear
+ls
+kubectl apply -f bookinfo.yaml
+kubectl get svc
+kubectl patch svc productpage -p '{"spec":{"type":"LoadBalancer"}}'
+kubectl get svc
